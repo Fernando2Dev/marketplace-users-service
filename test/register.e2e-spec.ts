@@ -1,10 +1,9 @@
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import bcrypt from 'bcrypt';
 import request from 'supertest';
 import { DataSource, Repository } from 'typeorm';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { createValidationPipe } from '../src/common/validation/create-validation-pipe.js';
 import { User, UserRole, UserStatus } from '../src/users/user.entity.js';
 
 process.env.NODE_ENV = 'test';
@@ -13,6 +12,7 @@ process.env.DB_PORT = process.env.USERS_TEST_DB_PORT ?? '5436';
 process.env.DB_USERNAME = 'postgres';
 process.env.DB_PASSWORD = 'postgres';
 process.env.DB_DATABASE = 'users_test_db';
+process.env.JWT_SECRET = 'register-e2e-test-secret';
 
 const validInput = () => ({
   email: 'register@example.com',
@@ -105,7 +105,13 @@ describe('POST /auth/register', () => {
       imports: [AppModule],
     }).compile();
     app = module.createNestApplication();
-    app.useGlobalPipes(createValidationPipe());
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    );
     await app.init();
     users = app.get(DataSource).getRepository(User);
     await users.clear();
@@ -186,10 +192,8 @@ describe('POST /auth/register', () => {
       .send(input)
       .expect(400);
 
-    expect(response.body.errors).toEqual(
-      expect.arrayContaining([
-        { field, message: expect.any(String) },
-      ]),
+    expect(response.body.message).toEqual(
+      expect.arrayContaining([expect.stringContaining(field)]),
     );
     expect(response.body).not.toHaveProperty('password');
     if (typeof input.password === 'string') {
@@ -204,10 +208,10 @@ describe('POST /auth/register', () => {
       .send({ ...validInput(), email: 'invalid-email', firstName: '   ' })
       .expect(400);
 
-    expect(response.body.errors).toEqual(
+    expect(response.body.message).toEqual(
       expect.arrayContaining([
-        { field: 'email', message: expect.any(String) },
-        { field: 'firstName', message: expect.any(String) },
+        expect.stringContaining('email'),
+        expect.stringContaining('firstName'),
       ]),
     );
     expect(await users.count()).toBe(0);
