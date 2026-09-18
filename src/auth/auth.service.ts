@@ -7,13 +7,10 @@ import { JwtService } from '@nestjs/jwt';
 import bcrypt from 'bcrypt';
 import bcryptjs from 'bcryptjs';
 import { QueryFailedError } from 'typeorm';
-import { UserStatus } from '../users/user.entity.js';
-import { PublicUser, toPublicUser } from '../users/dto/user.dto.js';
+import { User, UserStatus } from '../users/user.entity.js';
 import { UsersService } from '../users/users.service.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { LoginDto } from './dto/login.dto.js';
-
-export type LoginResponse = { user: PublicUser; token: string };
 
 @Injectable()
 export class AuthService {
@@ -22,23 +19,45 @@ export class AuthService {
     private readonly jwt: JwtService,
   ) {}
 
-  async login(dto: LoginDto): Promise<LoginResponse> {
+  async login(dto: LoginDto): Promise<{ user: Partial<User>; token: string }> {
     const user = await this.users.findByEmail(dto.email);
-    if (!user || !(await bcryptjs.compare(dto.password, user.password))) {
+
+    const userPassword = user
+      ? await bcryptjs.compare(dto.password, user.password)
+      : false;
+
+    if (!user || !userPassword) {
       throw new UnauthorizedException('Credenciais inválidas');
     }
+
     if (user.status !== UserStatus.Active) {
       throw new UnauthorizedException('Conta inativa');
     }
 
     const token = await this.jwt.signAsync(
-      { email: user.email, role: user.role },
+      {
+        email: user.email,
+        role: user.role,
+      },
       { subject: user.id },
     );
-    return { user: toPublicUser(user), token };
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        status: user.status,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      },
+      token,
+    };
   }
 
-  async register(dto: RegisterDto): Promise<PublicUser> {
+  async register(dto: RegisterDto): Promise<Partial<User>> {
     const existingUser = await this.users.findByEmail(dto.email);
 
     if (existingUser) {
@@ -47,13 +66,13 @@ export class AuthService {
 
     const password = await bcrypt.hash(dto.password, 10);
 
+    let user: User;
     try {
-      const user = await this.users.create({
+      user = await this.users.create({
         ...dto,
         password,
         status: UserStatus.Active,
       });
-      return toPublicUser(user);
     } catch (error) {
       if (
         error instanceof QueryFailedError &&
@@ -64,5 +83,16 @@ export class AuthService {
       }
       throw error;
     }
+
+    return {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role,
+      status: user.status,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
   }
 }

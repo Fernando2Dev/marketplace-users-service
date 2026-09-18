@@ -1,7 +1,7 @@
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { describe, expect, it } from 'vitest';
-import { createJwtOptions } from './jwt-options.js';
+import { createJwtOptions } from '../src/auth/jwt-options.js';
 
 function configWithSecret(secret: string | undefined): ConfigService {
   return { get: () => secret } as unknown as ConfigService;
