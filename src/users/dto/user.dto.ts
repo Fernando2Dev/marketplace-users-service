@@ -1,4 +1,4 @@
-import { User } from './user.entity.js';
+import { User } from '../user.entity.js';
 
 export type PublicUser = Pick<
   User,

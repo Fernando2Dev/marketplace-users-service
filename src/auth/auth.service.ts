@@ -1,10 +1,14 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import bcrypt from 'bcrypt';
 import bcryptjs from 'bcryptjs';
 import { QueryFailedError } from 'typeorm';
 import { UserStatus } from '../users/user.entity.js';
-import { PublicUser, toPublicUser } from '../users/public-user.js';
+import { PublicUser, toPublicUser } from '../users/dto/user.dto.js';
 import { UsersService } from '../users/users.service.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { LoginDto } from './dto/login.dto.js';
