@@ -54,3 +54,7 @@ A entidade deve conter somente esses campos. A definição do armazenamento do h
 ## Fora do escopo
 
 Endpoints, autenticação, autorização, cadastro, geração ou verificação de hash e regras de negócio serão definidos em specs futuras.
+
+## Commits
+
+Faça sempre um commit após cada implementação dessa spec

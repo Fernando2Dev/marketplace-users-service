@@ -19,29 +19,29 @@ export enum UserStatus {
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
-  id!: string;
+  id: string;
 
   @Column({ type: 'varchar', unique: true })
-  email!: string;
+  email: string;
 
   @Column({ type: 'varchar' })
-  password!: string;
+  password: string;
 
   @Column({ type: 'varchar' })
-  firstName!: string;
+  firstName: string;
 
   @Column({ type: 'varchar' })
-  lastName!: string;
+  lastName: string;
 
   @Column({ type: 'enum', enum: UserRole })
-  role!: UserRole;
+  role: UserRole;
 
   @Column({ type: 'enum', enum: UserStatus, default: UserStatus.Active })
-  status!: UserStatus;
+  status: UserStatus;
 
   @CreateDateColumn({ type: 'timestamptz' })
-  createdAt!: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamptz' })
-  updatedAt!: Date;
+  updatedAt: Date;
 }
