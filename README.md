@@ -75,6 +75,16 @@ O serviço valida a assinatura e a expiração do token com `JWT_SECRET`. Uma ro
 
 Novas rotas ficam protegidas automaticamente. Use `@Public()` apenas nas rotas que devem aceitar requisições sem JWT.
 
+## Consulta de usuários
+
+As três consultas abaixo exigem `Authorization: Bearer <token>`. Um token ausente ou inválido retorna **401**. Cada usuário retornado contém somente `id`, `email`, `firstName`, `lastName`, `role`, `status`, `createdAt` e `updatedAt`; a senha e seu hash nunca são incluídos.
+
+| Rota | Resultado |
+| --- | --- |
+| `GET /users/profile` | **200** com os dados atuais do usuário identificado pelo token. Retorna **404** se ele não existir mais. |
+| `GET /users/sellers` | **200** com uma lista de vendedores `active`, possivelmente vazia. Qualquer cliente com JWT válido pode consultar. |
+| `GET /users/:id` | **200** com o usuário do UUID informado, independentemente de papel ou status; **404** se não existir e **400** se o UUID for inválido. |
+
 ## Verificação
 
 Execute `npm run build`, `npm run lint`, `npm test` e `npm run test:e2e`. O último comando inicia automaticamente um PostgreSQL de teste isolado, na porta 5436, e limpa os usuários criados pelos testes. Se essa porta estiver ocupada, defina `USERS_TEST_DB_PORT` antes de executar o comando; o Compose e os testes usarão o mesmo valor.

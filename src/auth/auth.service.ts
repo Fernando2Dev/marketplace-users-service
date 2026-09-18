@@ -5,8 +5,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import bcrypt, { compare } from 'bcrypt';
-import { QueryFailedError } from 'typeorm';
-import { User, UserStatus } from '../users/user.entity.js';
+import { User, UserStatus } from '../users/entity/user.entity.js';
 import { UsersService } from '../users/users.service.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { LoginDto } from './dto/login.dto.js';
@@ -20,7 +19,7 @@ export class AuthService {
 
   async login(dto: LoginDto): Promise<{ user: Partial<User>; token: string }> {
 
-    const user = await this.users.findByEmail(dto.email);
+    const user = await this.users.findByEmailWithPassword(dto.email);
 
     if (!user) {
       throw new UnauthorizedException('Credenciais inválidas');
@@ -38,21 +37,10 @@ export class AuthService {
     const payload = { sub: user.id, email: user.email, role: user.role };
     const token = this.jwt.sign(payload);
 
-    return {
-      user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role,
-        status: user.status,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      }, token
-    };
+    return { user, token };
   }
 
-  async register(dto: RegisterDto): Promise<Partial<User>> {
+  async register(dto: RegisterDto): Promise<User> {
     const existingUser = await this.users.findByEmail(dto.email);
 
     if (existingUser) {
@@ -61,33 +49,12 @@ export class AuthService {
 
     const password = await bcrypt.hash(dto.password, 10);
 
-    let user: User;
-    try {
-      user = await this.users.create({
-        ...dto,
-        password,
-        status: UserStatus.Active,
-      });
-    } catch (error) {
-      if (
-        error instanceof QueryFailedError &&
-        (error.driverError as { code?: string }).code === '23505' &&
-        (await this.users.findByEmail(dto.email))
-      ) {
-        throw new ConflictException('Email já cadastrado');
-      }
-      throw error;
-    }
+    const user = await this.users.create({
+      ...dto,
+      password,
+      status: UserStatus.Active,
+    });
 
-    return {
-      id: user.id,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      role: user.role,
-      status: user.status,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    };
+    return user
   }
 }

@@ -8,7 +8,7 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { UserRole } from '../../users/user.entity.js';
+import { UserRole } from '../../users/entity/user.entity.js';
 
 export class RegisterDto {
   @IsDefined({ message: 'email é obrigatório' })
