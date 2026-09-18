@@ -63,7 +63,17 @@ Uma conta `active` com credenciais corretas recebe **200** com `user` e `token`.
 
 Email inexistente ou senha incorreta retornam **401** com `Credenciais inválidas`. Uma conta `inactive` com senha correta retorna **401** com `Conta inativa`; com senha incorreta, retorna `Credenciais inválidas`. Entrada inválida retorna **400** com mensagens que identificam os campos. Nenhum erro emite token ou expõe senha, hash ou segredo.
 
-Esta etapa emite o JWT no login; ela não adiciona proteção de rotas nem validação do token em outras requisições.
+## Proteção de rotas
+
+As rotas do `users-service` exigem autenticação por padrão. `POST /auth/register` e `POST /auth/login` são públicas e continuam acessíveis sem token. Para acessar uma rota protegida, envie o JWT recebido no login no header:
+
+```http
+Authorization: Bearer <token>
+```
+
+O serviço valida a assinatura e a expiração do token com `JWT_SECRET`. Uma rota protegida sem token Bearer, com token expirado ou com assinatura inválida retorna **401 Unauthorized** antes de executar o controller. Em uma requisição autenticada, `req.user` contém somente `id`, `email` e `role`, extraídos das claims `sub`, `email` e `role`.
+
+Novas rotas ficam protegidas automaticamente. Use `@Public()` apenas nas rotas que devem aceitar requisições sem JWT.
 
 ## Verificação
 

@@ -4,8 +4,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import bcrypt from 'bcrypt';
-import bcryptjs from 'bcryptjs';
+import bcrypt, { compare } from 'bcrypt';
 import { QueryFailedError } from 'typeorm';
 import { User, UserStatus } from '../users/user.entity.js';
 import { UsersService } from '../users/users.service.js';
@@ -17,16 +16,18 @@ export class AuthService {
   constructor(
     private readonly users: UsersService,
     private readonly jwt: JwtService,
-  ) {}
+  ) { }
 
   async login(dto: LoginDto): Promise<{ user: Partial<User>; token: string }> {
+
     const user = await this.users.findByEmail(dto.email);
 
-    const userPassword = user
-      ? await bcryptjs.compare(dto.password, user.password)
-      : false;
+    if (!user) {
+      throw new UnauthorizedException('Credenciais inválidas');
+    }
 
-    if (!user || !userPassword) {
+    const isPasswordValid = await compare(dto.password, user.password);
+    if (!isPasswordValid) {
       throw new UnauthorizedException('Credenciais inválidas');
     }
 
@@ -34,13 +35,8 @@ export class AuthService {
       throw new UnauthorizedException('Conta inativa');
     }
 
-    const token = await this.jwt.signAsync(
-      {
-        email: user.email,
-        role: user.role,
-      },
-      { subject: user.id },
-    );
+    const payload = { sub: user.id, email: user.email, role: user.role };
+    const token = this.jwt.sign(payload);
 
     return {
       user: {
@@ -52,8 +48,7 @@ export class AuthService {
         status: user.status,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
-      },
-      token,
+      }, token
     };
   }
 
