@@ -1,6 +1,12 @@
-import { Controller, Get, Param, ParseUUIDPipe, Request } from '@nestjs/common';
-import { UsersService } from './users.service.js';
-import { User } from './entity/user.entity.js';
+import {
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  ParseUUIDPipe,
+  Request,
+} from '@nestjs/common';
+import { UsersService } from './users.service';
 
 interface JwtUserPayload {
   id: string;
@@ -10,20 +16,26 @@ interface JwtUserPayload {
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly users: UsersService) {}
+  constructor(private readonly usersService: UsersService) {}
 
   @Get('profile')
-  profile(@Request() req: { user: JwtUserPayload }): Promise<User> {
-    return this.users.findById(req.user.id);
+  async getProfile(@Request() req: { user: JwtUserPayload }) {
+    return this.usersService.findById(req.user.id);
   }
 
   @Get('sellers')
-  sellers(): Promise<User[]> {
-    return this.users.findActiveSellers();
+  async getActiveSellers() {
+    return this.usersService.findActiveSellers();
   }
 
   @Get(':id')
-  findById(@Param('id', ParseUUIDPipe) id: string): Promise<User> {
-    return this.users.findById(id);
+  async findById(@Param('id', new ParseUUIDPipe()) id: string) {
+    const user = await this.usersService.findById(id);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user;
   }
 }

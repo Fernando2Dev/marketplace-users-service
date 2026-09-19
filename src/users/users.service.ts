@@ -1,38 +1,41 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User, UserRole, UserStatus } from './entity/user.entity.js';
+import { User } from './entities/user.entity';
+import { UserRole } from './enums/user-role.enum';
+import { UserStatus } from './enums/user-status.enum';
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectRepository(User) private readonly users: Repository<User>) { }
+  constructor(
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
+  ) {}
 
-  findByEmail(email: string): Promise<User | null> {
-    return this.users.findOne({ where: { email } });
+  async findByEmail(email: string): Promise<User | null> {
+    return this.usersRepository.findOne({ where: { email } });
   }
 
   async findByEmailWithPassword(email: string): Promise<User | null> {
-    return this.users
+    return this.usersRepository
       .createQueryBuilder('user')
       .addSelect('user.password')
       .where('user.email = :email', { email })
       .getOne();
   }
 
-  create(data: Partial<User>): Promise<User> {
-    const user = this.users.create(data);
-    return this.users.save(user);
+  async create(data: Partial<User>): Promise<User> {
+    const user = this.usersRepository.create(data);
+    return this.usersRepository.save(user);
   }
 
-  async findById(id: string): Promise<User> {
-    const user = await this.users.findOne({ where: { id } });
-    return user as User;
+  async findById(id: string): Promise<User | null> {
+    return this.usersRepository.findOne({ where: { id } });
   }
 
   async findActiveSellers(): Promise<User[]> {
-    const users = await this.users.find({
-      where: { role: UserRole.Seller, status: UserStatus.Active }
+    return this.usersRepository.find({
+      where: { role: UserRole.SELLER, status: UserStatus.ACTIVE },
     });
-    return users
   }
 }

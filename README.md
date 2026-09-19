@@ -1,90 +1,98 @@
-﻿# users-service
+<p align="center">
+  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
+</p>
 
-Scaffold do microserviço de usuários do marketplace, com NestJS, TypeORM e PostgreSQL 15.
+[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
+[circleci-url]: https://circleci.com/gh/nestjs/nest
 
-## Executar localmente
+  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
+    <p align="center">
+<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
+<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
+<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
+<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
+<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
+<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
+<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
+  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
+    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
+  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
+</p>
+  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
+  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-Requisitos: Node.js, npm e Docker com Compose.
+## Description
 
-1. Instale as dependências: `npm ci`.
-2. Inicie o banco: `docker compose up -d --wait users-db`.
-3. Copie `.env.example` para `.env`, defina um valor secreto não vazio em `JWT_SECRET` e ajuste as demais variáveis, se necessário.
-4. Inicie o serviço: `npm run start:dev`.
+[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
-No PowerShell, use `Copy-Item .env.example .env` para copiar o arquivo. A configuração local usa HTTP na porta 3000 e PostgreSQL na porta 5433, com database `users_db` e usuário/senha `postgres`/`postgres`.
+## Project setup
 
-## Configuração
-
-| Variável      | Finalidade                                | Valor local                                     |
-| ------------- | ----------------------------------------- | ----------------------------------------------- |
-| `PORT`        | Porta HTTP                                | `3000`                                          |
-| `DB_HOST`     | Host do PostgreSQL                        | `localhost`                                     |
-| `DB_PORT`     | Porta do PostgreSQL vista pelo serviço    | `5433`                                          |
-| `DB_USERNAME` | Usuário do banco                          | `postgres`                                      |
-| `DB_PASSWORD` | Senha do banco                            | `postgres`                                      |
-| `DB_DATABASE` | Database                                  | `users_db`                                      |
-| `JWT_SECRET`  | Segredo de assinatura dos tokens de login | Obrigatório; definir um valor próprio em `.env` |
-
-O TypeORM sincroniza o esquema quando `NODE_ENV` não é `production`. Em produção, a sincronização fica desativada; esta etapa não inclui migrações.
-Sem `JWT_SECRET`, o módulo de autenticação falha na inicialização e não emite tokens. Não inclua o segredo no código nem no controle de versão.
-
-## Registro de usuários
-
-Envie `POST /auth/register` com JSON contendo somente os cinco campos abaixo:
-
-```json
-{
-  "email": "pessoa@example.com",
-  "password": "senha-ilustrativa",
-  "firstName": "Ana",
-  "lastName": "Silva",
-  "role": "buyer"
-}
+```bash
+$ npm install
 ```
 
-`role` aceita `buyer` ou `seller`. A senha deve ter pelo menos 6 caracteres. Nome e sobrenome devem conter caracteres além de espaços e ter no máximo 100 caracteres. O serviço rejeita campos adicionais.
+## Compile and run the project
 
-O sucesso retorna **201** com `id`, `email`, `firstName`, `lastName`, `role`, `status` (`active`), `createdAt` e `updatedAt`. A senha não integra a resposta e é armazenada como hash bcrypt com custo 10.
+```bash
+# development
+$ npm run start
 
-Entradas inválidas retornam **400** com `message`, uma lista de mensagens que identificam os campos inválidos. Um email já cadastrado retorna **409** com a mensagem `Email já cadastrado`, inclusive quando duas requisições tentam cadastrar o mesmo email ao mesmo tempo. As respostas não incluem o valor da senha recebida.
+# watch mode
+$ npm run start:dev
 
-## Login
-
-Envie `POST /auth/login` com JSON contendo email válido e senha de pelo menos 6 caracteres:
-
-```json
-{
-  "email": "pessoa@example.com",
-  "password": "senha-ilustrativa"
-}
+# production mode
+$ npm run start:prod
 ```
 
-Uma conta `active` com credenciais corretas recebe **200** com `user` e `token`. `user` contém somente `id`, `email`, `firstName`, `lastName`, `role`, `status`, `createdAt` e `updatedAt`. O token JWT é assinado com `JWT_SECRET`, contém `sub` (UUID do usuário), `email` e `role`, e expira 24 horas após a emissão.
+## Run tests
 
-Email inexistente ou senha incorreta retornam **401** com `Credenciais inválidas`. Uma conta `inactive` com senha correta retorna **401** com `Conta inativa`; com senha incorreta, retorna `Credenciais inválidas`. Entrada inválida retorna **400** com mensagens que identificam os campos. Nenhum erro emite token ou expõe senha, hash ou segredo.
+```bash
+# unit tests
+$ npm run test
 
-## Proteção de rotas
+# e2e tests
+$ npm run test:e2e
 
-As rotas do `users-service` exigem autenticação por padrão. `POST /auth/register` e `POST /auth/login` são públicas e continuam acessíveis sem token. Para acessar uma rota protegida, envie o JWT recebido no login no header:
-
-```http
-Authorization: Bearer <token>
+# test coverage
+$ npm run test:cov
 ```
 
-O serviço valida a assinatura e a expiração do token com `JWT_SECRET`. Uma rota protegida sem token Bearer, com token expirado ou com assinatura inválida retorna **401 Unauthorized** antes de executar o controller. Em uma requisição autenticada, `req.user` contém somente `id`, `email` e `role`, extraídos das claims `sub`, `email` e `role`.
+## Deployment
 
-Novas rotas ficam protegidas automaticamente. Use `@Public()` apenas nas rotas que devem aceitar requisições sem JWT.
+When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
 
-## Consulta de usuários
+If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
 
-As três consultas abaixo exigem `Authorization: Bearer <token>`. Um token ausente ou inválido retorna **401**. Cada usuário retornado contém somente `id`, `email`, `firstName`, `lastName`, `role`, `status`, `createdAt` e `updatedAt`; a senha e seu hash nunca são incluídos.
+```bash
+$ npm install -g @nestjs/mau
+$ mau deploy
+```
 
-| Rota | Resultado |
-| --- | --- |
-| `GET /users/profile` | **200** com os dados atuais do usuário identificado pelo token. Retorna **404** se ele não existir mais. |
-| `GET /users/sellers` | **200** com uma lista de vendedores `active`, possivelmente vazia. Qualquer cliente com JWT válido pode consultar. |
-| `GET /users/:id` | **200** com o usuário do UUID informado, independentemente de papel ou status; **404** se não existir e **400** se o UUID for inválido. |
+With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
 
-## Verificação
+## Resources
 
-Execute `npm run build`, `npm run lint`, `npm test` e `npm run test:e2e`. O último comando inicia automaticamente um PostgreSQL de teste isolado, na porta 5436, e limpa os usuários criados pelos testes. Se essa porta estiver ocupada, defina `USERS_TEST_DB_PORT` antes de executar o comando; o Compose e os testes usarão o mesmo valor.
+Check out a few resources that may come in handy when working with NestJS:
+
+- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
+- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
+- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
+- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
+- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
+- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
+- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
+- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+
+## Support
+
+Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+
+## Stay in touch
+
+- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
+- Website - [https://nestjs.com](https://nestjs.com/)
+- Twitter - [@nestframework](https://twitter.com/nestframework)
+
+## License
+
+Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).

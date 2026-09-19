@@ -1,35 +1,29 @@
+version: '3.8'
+
 services:
   users-db:
     image: postgres:15
+    container_name: marketplace-users-db
     environment:
       POSTGRES_DB: users_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - '5433:5432'
+      - "5433:5432"
     volumes:
       - users_db_data:/var/lib/postgresql/data
+    networks:
+      - users-network
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U postgres -d users_db']
-      interval: 5s
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
       timeout: 5s
-      retries: 10
-  users-db-test:
-    image: postgres:15
-    environment:
-      POSTGRES_DB: users_test_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - '${USERS_TEST_DB_PORT:-5436}:5432'
-    volumes:
-      - users_test_db_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U postgres -d users_test_db']
-      interval: 5s
-      timeout: 5s
-      retries: 10
+      retries: 5
+    restart: unless-stopped
 
 volumes:
   users_db_data:
-  users_test_db_data:
+
+networks:
+  users-network:
+    driver: bridge
